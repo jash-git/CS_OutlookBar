@@ -1,0 +1,798 @@
+<html>
+
+<body>
+
+<b>Table Of Contents</b>
+<dl>
+<dd><a href="#Introduction">Introduction</a></dd>
+<dd><a href="#MinReq">Minimum Requirements</a></dd>
+<dl>
+<dd><a href="#Req1">Requirements: What I Need</a></dd>
+<dd><a href="#Req2">Requirements: What I Don't Need</a></dd>
+</dl>
+<dd><a href="#ProtoDesign">The Prototype Design</a></dd>
+<dl>
+<dd><a href="#Proto1A">The GUI Components</a></dd>
+<dd><a href="#Proto1B">The Object Model</a></dd>
+</dl>
+<dd><a href="#ProtoImp">The Prototype Implementation</a></dd>
+<dl>
+<dd><a href="#ProtoImp1">The Objects</a></dd>
+<dl>
+<dd><a href="#OutlookBar">OutlookBar</a></dd>
+<dd><a href="#IconPanel">IconPanel</a></dd>
+</dl>
+<dd><a href="#EyeCandy">Eye Candy</a></dd>
+</dl>
+<dd><a href="#Conclusion">Conclusion</a></dd>
+</dl>
+
+<h2><a name="#Introduction">Introduction</a></h2>
+This is yet another Outlook Bar implementation.  While Carlos xxx has written an excellent implementation in C#, I wanted an implementation that wasn't heavily dependent
+upon <code>gdi32</code>, <code>user32</code>, and <code>comctl32</code> DLL's, and wasn't deeply entwined in someone's framework.  Ironic, isn't it!  Because I need an
+implementation that is better suited for the Application Automation Layer (AAL) framework, and Carlos' implementation, while very thorough, isn't well suited for the
+AAL vision of things.  I guess this is why the wheel keeps getting re-invented--because you need different wheels for different jobs.<p>
+
+I'm also going to do something I don't see too often in Code Project articles.  Most articles are written "after the fact".  That is, the component or program is already
+implemented, and the article describes its design, usage, and interesting implementation details.  In this article, I'm going to expose the development process so that the
+reader sees the steps that I took in implementing the control.  It's certainly fun to write an article in this manner, and I hope it's just as fun to read it!
+
+<h2><a name="#MinReq">Minimum Requirements</a></h2>
+I'll start with requirements.  This is about the only formal design process step to which I conform, and even that is problematic, as requirements are a continually evolving
+thing in my world.  In order to limit the amount of time I spend on something, I have to identify what my minimum requirements are.  I depend heavily on working the concept that
+the architecture that I develop will accommodate additional requirements as time goes on.<p>
+
+I find it useful to identify in the requirements both what I need and what I don't need.  The "don't need" list is a good resource for keeping track of future expansion and helps
+to design a good architecture to support those future requirements.  One general requirement though--while I'm eventually going to 
+incorporate the control into the AAL, I'd like to
+develop it outside of the framework, so that others can more easily modify it and 
+incorporate it into their own applications.
+
+<h3><a name="#Min1">Requirements: What I Need</a></h3>
+
+<ul>
+  <li>The control has a specifiable but fixed width</li>
+  <li>The control has a specifiable but fixed height</li>
+  <li>The control contains an number of "bands"</li>
+  <li>A band consists of two things: a button-like control at the top of the band and a collection of items</li>
+  <li>Each item in the band has an icon associated with it</li>
+  <li>Left clicking on the item in the band fires an event</li>
+  <li>Stay within the confines of the .NET environment.&nbsp; (No DllImport 
+  stuff)</li>
+  <li>XML defined--band text, icon bitmaps, event names</li>
+  <li>Owner drawn stuff should be minimized and the control should look good 
+  when a manifest is being used.</li>
+  </ul>
+
+<h3><a name="#Min2">Requirements: What I Don't Need</a></h3>
+
+  <ul>
+    <li>Resizing the control and the issues that are involved</li>
+    <li>Large and small icon support</li>
+    <li>Those cute little band scrolling buttons.  I like scroll bars better, anyways.</li>
+    <li>Popup context menus</li>
+    <li>Animation (the band "opens" in an animated fashion)</li>
+    <li>A form designer compatible control.&nbsp; Don't use it, don't need it.</li>
+    <li>Other kinds of controls in the band other than icons.</li>
+    <li>Bands cannot be re-ordered by the user (dragging them to change their 
+    order).</li>
+    </ul>
+    <p>That's sufficient to begin with.&nbsp; As I start developing the control, 
+    this list will probably change.&nbsp; (It's interesting writing this, 
+    because I haven't begun work on the control yet, so I don't really know if 
+    this is true, but experience has shown that it <u>always</u> is true!</p>
+    <p>
+
+<h2><a name="#ProtoDesign">The Prototype Design</a></h2>
+
+<h3><a name="#Proto1A">The GUI Components</a></h3>
+
+<p>This step involves getting a basic architecture to support the requirements.&nbsp; 
+Since one of the goals is to stay within the .NET framework of available tools, 
+the primary device for implementing an Outlook bar will be panels.&nbsp; One of 
+the nice things about panels is that they provide an automatic scrolling feature 
+for their contents.&nbsp; And fortunately, this auto-scroll capability can also 
+be turned off.&nbsp; I am a firm believer (having it drilled into me by my 
+boss/neighbor when I was a kid) that concepts should be communicated in words as 
+well as in pictures.&nbsp; By being able to clearly communicate a design in 
+words, a dictionary of terms is established which promotes a common 
+understanding of design concepts and is a stepping stone for determining 
+implementation issues.</p>
+<p>With that in mind, the basic architecture that I have in mind is this:</p>
+<ol>
+  <li>The entire bar will be implemented as a panel (we'll call it the &quot;bar 
+  panel&quot;) with auto-scrolling disabled</li>
+  <li>Each bar will consist of a child &quot;band panel&quot; that contains the band 
+  caption represented as a button.&nbsp; This panel will also have 
+  auto-scrolling disabled.&nbsp; The panel will be sized to the height of the 
+  button when the band is unselected, and will be expanded vertically to the 
+  size of the parent panel when expanded</li>
+  <li>An &quot;icon panel&quot; will be used as a child to the above panel.&nbsp; It will 
+  be physically positioned so that it starts just below the button in the parent 
+  panel.&nbsp; This panel <u>will</u> have auto-scrolling enabled, as it will 
+  contain the icons that may expand beyond the vertical confines of the entire 
+  band.</li>
+  <li>From a design point of view, this icon panel needs to be abstracted 
+  sufficiently to support other kinds of panels, such as &quot;tree view panel&quot; or 
+  &quot;list view panel&quot; (see Carlos' implementation).</li>
+  <li>While I'm not going to bother with small and large icon support in this 
+  version, implementing an image list is a good idea, if for no other reason 
+  than because it supports background color definition.</li>
+</ol>
+<p>Here's a picture of what I have in mind:</p>
+<img src="CSOutlookBar\design.jpg" width="193" height="481">
+
+<p>The horizontal and vertical extents of each panel are for illustrative 
+purposes only and won't necessarily match the actual implementation.</p>
+<h3><a name="#Proto1B">The Object Model</a></h3>
+
+<p>Now that the layout of the GUI components as been developed, the next step is 
+to design an object model that supports this structure.&nbsp; There is a rule of 
+thumb that I use when working with any pre-existing classes, as is the case here 
+(buttons and panels).&nbsp; Always provide a specialization for the class (as 
+in, a derived class) or a wrapper for the object.&nbsp; While I do violate this 
+rule more than I'd like to admit, it is a good one to follow, because it allows 
+for the expansion of the object model at a later time.&nbsp; If the pre-existing 
+class is used directly, it is almost always certain that later on in the design 
+some specialization will be required.&nbsp; Adding specialization later, in the 
+midst of implementation, can result in lots of class renaming and re-testing.&nbsp; 
+Refactoring, whenever it is done, is a great idea, but it can be really 
+expensive.</p>
+<p>The question then becomes whether to implement a specialized class or a 
+wrapper class.&nbsp; There are some old terms for this that are still useful but 
+not too often heard anymore--&quot;is a kind of&quot; and &quot;has a&quot;.&nbsp; These represent 
+specialization and wrapping, respectively.&nbsp; In many cases, it's pretty 
+difficult to figure out which to use, as is the case here.&nbsp; To help with 
+that decision, I often rely on an analysis of the semantics used to describe the 
+problem.&nbsp; In this case, each object, the bar panel, the band panel, and the 
+icon panel, are all forms of specialization.&nbsp; If these objects are derived 
+from the Panel class, the architecture can leverage (don't you love that word) 
+the Panel control collection.&nbsp; This avoids implementing a separate 
+collection (contrast this to Carlos' implementation, which has a band collection 
+and an item collection).&nbsp; Hopefully, this design decision will not bite us 
+later on.&nbsp; Why do I say this?&nbsp; Because experience has taught me not to 
+rely too heavily on framework functionality.&nbsp; There are often unwanted 
+side-effects.</p>
+<p>Again, by observing the semantics of the GUI component layout and the 
+diagram, it is clear where the &quot;has a&quot; relationships are:</p>
+<ul>
+  <li>The bar panel object has a band panel</li>
+  <li>the band panel has a button and a icon panel</li>
+  <li>the icon panel has a collection of icons.</li>
+</ul>
+<p>Some of the &quot;has a&quot; relationships are in the form of containers, which brings 
+up the important issue of determining the m to n relationship of objects:</p>
+<ul>
+  <li>The bar panel to band panel relationship is 1::n</li>
+  <li>The band panel to button relationship is 1::1</li>
+  <li>The band to icon panel relationship is 1::1</li>
+  <li>The icon panel to icon relationship is 1::n</li>
+</ul>
+<p>While I pretty much don't bother with object model diagrams anymore, I put 
+this one together:</p>
+
+<img src="CSOutlookBar\objectModel1.jpg" width="627" height="529"><p>
+
+I usually don't specify methods and intrinsic properties during design time when developing on my own because it's sort of a waste of time.
+As a project manager, I don't enforce these definitions at design time either with the people I trust.  The programmers that I don't trust to write
+good code (and there's a lot of "senior software engineers" out there that fit this bill) are required to come up with a complete object model design and psuedo code.
+I also enforce naming conventions, case usage, and verb-noun ordering of method names.  And for the record, I think Hungarian notation is awful.
+
+<h2><a name="#ProtoImp">The Prototype Implementation</a></h2>
+
+<h3><a name="#ProtoImp1">The Objects</a></h3>
+Using the above diagram results in the following stubs for the various objects. Because the <code>Panel.Controls</code> property is used for 
+containing the control lists, you will not see containers or collections implemented in the class definition.
+<pre>using System;
+using System.Windows.Forms;
+
+namespace OutlookBar
+{
+	public class OutlookBar : Panel
+	{
+		public OutlookBar()
+		{
+		}
+	}
+
+	internal class BandPanel : Panel
+	{
+		public BandPanel()
+		{
+		}
+	}
+
+	internal class BandButton : Button
+	{
+		public BandButton()
+		{
+		}
+	}
+
+	public abstract class ContentPanel : Panel
+	{
+		public ContentPanel()
+		{
+		}
+	}
+
+	public class IconPanel : ContentPanel
+	{
+		public IconPanel()
+		{
+		}
+	}
+
+	internal class PanelIcon : PictureBox
+	{
+		public PanelIcon()
+		{
+		}
+	}
+}
+</pre>
+
+Note that the <code>IconPanel</code> class is public.  This allows the application to instantiated the desired band types (of which, IconPanel is the only one provided in this
+implementation). Now let's start fleshing out some of the details, starting with the <code>OutlookBar</code> 
+class.
+<h3><a name="#OutlookBar">OutlookBar</a></h3>
+
+<p>First, the <code>OutlookBar</code> needs to be instantiated so that it appears on the 
+form. Creating a new project, I modified the <code>Form1</code> constructor to instantiate the <code>OutlookBar</code>, and
+specified a border style so that its creation and placement can be verified:
+<pre>public Form1()
+{
+	//
+	// Required for Windows Form Designer support
+	//
+	InitializeComponent();
+
+	//
+	// TODO: Add any constructor code after InitializeComponent call				 
+	//
+
+	OutlookBar outlookBar=new OutlookBar();
+	outlookBar.Location=new Point(0, 0);
+	outlookBar.Size=new Size(150, this.ClientSize.Height);
+	outlookBar.BorderStyle=BorderStyle.FixedSingle;
+	Controls.Add(outlookBar);
+}
+</pre>
+
+Success!<p>
+<img src="CSOutlookBar\screenShot1.jpg" width="240" height="220"><p>
+
+<b>The First Band</b><p>
+
+Next, methods must be added for creating the bands.&nbsp; This requires 
+specifying the text and the type of band. To keep things simple, the application 
+will be responsible for instantiating the desired band type. This thrusts the 
+implementation immediately into some complex issues of sizing and positioning, 
+but as always, starting simple is the best idea.<p>
+
+The enhancements to the <code>OutlookBar</code>
+class is straightforward:
+<pre>public class OutlookBar : Panel
+{
+	private int buttonHeight;
+
+	public int ButtonHeight
+	{
+		get
+		{
+			return buttonHeight;
+		}
+
+		set
+		{
+			buttonHeight=value;
+			// do recalc layout for entire bar
+		}
+	}
+
+	public OutlookBar()
+	{
+		buttonHeight=25;
+	}
+
+	public void AddBand(string caption, ContentPanel content)
+	{
+		BandPanel bandPanel=new BandPanel(caption, content);
+		Controls.Add(bandPanel);
+		RecalcLayout(bandPanel);
+	}
+
+	private void RecalcLayout(BandPanel bandPanel)
+	{
+		// the band dimensions
+		bandPanel.Location=new Point(0, 0);
+		bandPanel.Size=new Size(ClientRectangle.Width, buttonHeight);
+
+		// the contained button dimensions
+		bandPanel.Controls[0].Location=new Point(0, 0);
+		bandPanel.Controls[0].Size=new Size(ClientRectangle.Width, buttonHeight);
+
+		// the contained content panel dimensions
+		bandPanel.Controls[1].Location=new Point(0, buttonHeight);
+		bandPanel.Controls[1].Size=new Size(ClientRectangle.Width, 0);
+	}
+}
+</pre>
+And results in the following display:<p>
+<img src="CSOutlookBar\screenShot2.jpg" width="354" height="196"><p>
+In this implementation, the button height is identified as a parameter that might be useful to externalize so that it
+is under the control of the application.  Obviously, when the button height is changed after the Outlook bar has been created,
+the entire bar and its children will have to be recalculated.<p>
+
+The <code>RecalcLayout</code> method for the band is a simple starting point for determining the dimensions of the button
+and the associated content panel.  This method has been placed in the <code>OutlookBar</code> class because other information contained
+only in the <code>OutlookBar</code> will be used soon--namely, the band's index.
+
+<p>This implementation allows for adding one band to the bar.&nbsp; That's a 
+good starting point, as details such as activating and deactivating a band can 
+be worked out at this point.&nbsp; Also notice that this implementation raises 
+some questions not answered in the specifications:</p>
+<ul>
+  <li>Are all the bands added at one time during initialization?</li>
+  <li>Can bands be removed?</li>
+  <li>Can bands be added later, when the application is running?</li>
+  <li>Should the insertion point be specified when adding bands?</li>
+</ul>
+<p>This is typical of any specification.&nbsp; During implementation, questions 
+always arise that are not answered in the spec, no matter how well thought out.&nbsp; 
+In the particular case of this prototype, the answers are yes, no, no, no, 
+respectively.&nbsp; Sure makes life easier!</p>
+<p><b>Multiple Bands</b></p>
+<p>It will be more interesting to deal with the expansion and contraction of a 
+band if the prototype first allows for multiple bands.&nbsp; This is easily done 
+by keeping track of how many bands have been added, and passing the band's index 
+relative to the other bands to the &lt;code&gt;RecalcLayout&lt;/code&gt; method.&nbsp; The 
+<code>OutlookBar.Controls.Count</code> property provides the 
+necessary information.&nbsp; Because the band's button and content control's are 
+child controls, these are relative to the band position, so only the band 
+position needs to be modified.&nbsp; The changes are quite simple:</p>
+<pre>public void AddBand(string caption, ContentPanel content)
+{
+	BandPanel bandPanel=new BandPanel(caption, content);
+	Controls.Add(bandPanel);
+	RecalcLayout(bandPanel, <span style="background-color: #FF00FF">Controls.Count-1</span>);
+}
+
+private void RecalcLayout(BandPanel bandPanel, int index)
+{
+	// the band dimensions
+	bandPanel.Location=new Point(0, <span style="background-color: #FF00FF">buttonHeight</span><span style="background-color: #FF00FF">*index</span>);
+	bandPanel.Size=new Size(ClientRectangle.Width, buttonHeight);
+
+	// the contained button dimensions
+	bandPanel.Controls[0].Location=new Point(0, 0);
+	bandPanel.Controls[0].Size=new Size(ClientRectangle.Width, buttonHeight);
+
+	// the contained content panel dimensions
+	bandPanel.Controls[1].Location=new Point(0, buttonHeight);
+	bandPanel.Controls[1].Size=new Size(ClientRectangle.Width, 0);
+}
+</pre>
+resulting in:<p>
+<img src="CSOutlookBar\screenShot3.jpg" width="266" height="204"><p>
+<b>Activating A Band</b>
+
+
+
+<p>
+Activating a band requires keeping track of the band 
+index that is active and recalculating the layout of the entire bar when a band 
+is activated.&nbsp; Firstly, this requires handling the button click event.&nbsp; 
+A single event sink will be used for all the buttons, so the button needs to 
+have some information about itself so that it can notify the <code>OutlookBar</code> that it's associated band should be selected.
+This information is preserved in the instance of the button itself.  (Events are a wonderful thing in the .NET framework, and one feature is that
+events can be associated with an instance of an object).  A variety of information might want to be associated with the band's
+button, but for now the index and <code>OutlookBar</code> instance will suffice.  A simple class can handle this:<p>
+<pre>internal class BandTagInfo
+{
+	public OutlookBar outlookBar;
+	public int index;
+
+	public BandTagInfo(OutlookBar ob, int index)
+	{
+		outlookBar=ob;
+		this.index=index;
+	}
+}
+</pre>
+And the following modification is made to the <code>AddBand</code> method:<p>
+<pre>public void AddBand(string caption, ContentPanel content)
+{
+	<span style="background-color: #FF00FF">int</span><span style="background-color: #FF00FF"> index=</span><span style="background-color: #FF00FF">Controls.Count</span><span style="background-color: #FF00FF">;</span>
+	<span style="background-color: #FF00FF">BandTagInfo</span><span style="background-color: #FF00FF"> </span><span style="background-color: #FF00FF">bti</span><span style="background-color: #FF00FF">=new </span><span style="background-color: #FF00FF">BandTagInfo(this</span><span style="background-color: #FF00FF">, index);</span>
+	BandPanel bandPanel=new BandPanel(caption, content<span style="background-color: #FF00FF">, </span><span style="background-color: #FF00FF">bti</span>);
+	Controls.Add(bandPanel);
+	RecalcLayout(bandPanel<span style="background-color: #FF00FF">, index</span>);
+}
+</pre>
+<p>
+Incidentally, the rest of the classes are still simple stubs for initializing various state information:<p>
+<pre>internal class BandPanel : Panel
+{
+	public BandPanel(string caption, ContentPanel content, BandTagInfo bti)
+	{
+		BandButton bandButton=new BandButton(caption, bti);
+		Controls.Add(bandButton);
+		Controls.Add(content);
+	}
+}
+
+internal class BandButton : Button
+{
+	private BandTagInfo bti;
+	
+	public BandButton(string caption, BandTagInfo bti)
+	{
+		Text=caption;
+		FlatStyle=FlatStyle.Standard;
+		Visible=true;
+		this.bti=bti;
+	}
+}
+
+public abstract class ContentPanel : Panel
+{
+	public ContentPanel()
+	{
+		// initial state
+		Visible=false;
+	}
+}
+
+internal class IconPanel : ContentPanel
+{
+	public IconPanel()
+	{
+	}
+}
+
+internal class PanelIcon : PictureBox
+{
+	public PanelIcon()
+	{
+	}
+}
+</pre>
+
+As is evident, the <code>BandTagInfo</code> object is passed down to the <code>BandButton</code> constructor, which 
+is preserved by the button instance.&nbsp; 
+The event handler can now be declared and associated with the button click, which then invokes a method in the appropriate instance of the
+<code>OutlookBar</code> class to perform the actual selection:<p>
+<pre>internal class BandButton : Button
+{
+	private BandTagInfo bti;
+
+	public BandButton(string caption, BandTagInfo bti)
+	{
+		Text=caption;
+		FlatStyle=FlatStyle.Standard;
+		Visible=true;
+		this.bti=bti;
+		<span style="background-color: #FF00FF">Click+=new </span><span style="background-color: #FF00FF">EventHandler(SelectBand</span><span style="background-color: #FF00FF">);</span>
+	}
+
+	private void SelectBand(object sender, EventArgs e)
+	{
+		bti.outlookBar.SelectBand(bti.index);
+	}
+}
+</pre>
+The <code>OutlookBar</code> class is enhanced to preserve the current band selection and initialize it to "no selection".  A getter and setter is provided for the property.  The
+setter invokes the same <code>SelectBand<code> method as clicking on the button:<p>
+<pre>public class OutlookBar : Panel
+{
+	private int buttonHeight;
+	private int selectedBand;
+
+	public int SelectedBand
+	{
+		get
+		{
+			return selectedBand;
+		}
+		set
+		{
+			SelectBand(value);
+		}
+	}
+	...
+</pre>
+The <code>SelectBand</code> method:<p>
+<pre>public void SelectBand(int index)
+{
+	selectedBand=index;
+	RedrawBands();
+}
+
+void RedrawBands()
+{
+	for (int i=0; i &lt; Controls.Count; i++)
+	{
+		BandPanel bp=Controls[i] as BandPanel;
+		RecalcLayout(bp, i);
+	}
+}
+</pre>
+iterates through all the band controls and instructs them to recalculate their layout, so the real work is done in that method.<p>
+Time to think about some things:<ul>
+  <li>The band, when selected, has a height that is always equal to the bar 
+  height minus the height of all the buttons on the bar.</li>
+  <li>The bands before the selected band are drawn at the top of bar.</li>
+  <li>The bands after the selected band are drawn at the bottom of the selected 
+  band.</li>
+</ul>
+<p>This makes it a little annoying to have an unselected index of &quot;-1&quot;, as all 
+the bands are therefore &quot;after&quot; some imaginary selected band.&nbsp; There is a 
+really simple solution to this, which you can see in Outlook: one band is always 
+selected!&nbsp; Therefore, the default selection will be index &quot;0&quot;--the first 
+band.&nbsp; Whenever a band is added, the &quot;selected band height&quot; must be 
+recalculated.&nbsp; This is implemented as a method because it'll be used later 
+as part of button height changes and window size changes:</p>
+<pre>private void UpdateBarInfo()
+{
+	selectedBandHeight=ClientRectangle.Height-(Controls.Count * buttonHeight);
+}
+</pre>
+<p>
+The band layout calculation must now take into account the placement of the band, using the criteria:<ul>
+  <li>Is this band before the selected band?</li>
+  <li>Is this band the selected band?</li>
+  <li>Is this band after the selected band?</li>
+  </ul>
+  <p>
+<pre>private void RecalcLayout(BandPanel bandPanel, int index)
+{
+	<span style="background-color: #FF00FF">int vPos=(index <= selectedBand) ? buttonHeight*index : buttonHeight*index+selectedBandHeight;</span>
+	<span style="background-color: #FF00FF">int height=selectedBand==index ? selectedBandHeight : buttonHeight;</span>
+
+	// the band dimensions
+	bandPanel.Location=new Point(0, <span style="background-color: #FF00FF">vPos</span>);
+	bandPanel.Size=new Size(ClientRectangle.Width, <span style="background-color: #FF00FF">height</span>);
+
+	// the contained button dimensions
+	bandPanel.Controls[0].Location=new Point(0, 0);
+	bandPanel.Controls[0].Size=new Size(ClientRectangle.Width, buttonHeight);
+
+	// the contained content panel dimensions
+	bandPanel.Controls[1].Location=new Point(0, buttonHeight);
+	bandPanel.Controls[1].Size=new Size(ClientRectangle.Width, <span style="background-color: #FF00FF">height</span>);
+}</pre>
+This results in some wonderfully functional capability and pretty much completes 
+the band activation issue.  The Outlook bar's buttons can now be clicked on, and they move around as required:<p>
+<img src="CSOutlookBar\screenShot4.jpg" width="312" height="288"> <p>
+
+One minor detail.&nbsp; The <code>AddBand</code> method can no longer simply set 
+up the location and size of the newly added band, because this influences the 
+height of the first (selected) band.&nbsp; As a result,
+the application is responsible now for selecting the desired band after all the bands have been created.  Nothing like changing the rules on the fly, is there!<p>
+
+<p><b>Application Resizing</b></p>
+Of major concern at this point is: what happens to the bar when the containing form is resized?  For this, an event handler must be added.  Another wonderful feature
+of .NET's event mechanism is that multiple handlers can be associated with the same event.  So regardless of other resizing handlers associated with the form, the Outlook
+bar can add its own:<p>
+<pre>public void Initialize()
+{
+	// parent must exist!
+	Parent.SizeChanged+=new EventHandler(SizeChangedEvent);
+}
+<pre>Unfortunately, because this must be done after the Outlook bar has been added to the form (or other control), it requires a separate initialization method so that the
+parent is guaranteed to exist.<p>
+
+The event handler itself is very straightforward.  It recalculates the Outlook bar panel size, updates the selected band height, and calls 
+the <code>RedrawBands</code> method: <pre>private void SizeChangedEvent(object sender, EventArgs e)
+{
+	Size=new Size(Size.Width, ((Control)sender).ClientRectangle.Size.Height);
+	UpdateBarInfo();
+	RedrawBands();
+}
+</pre>
+Note that this handler only deals with vertical resizing.  A separate mechanism is required if you wish to deal with horizontal resizing,
+for example if the control is contained in a splitter window.
+<h3><a name="#IconPanel">IconPanel</a></h3>
+
+Time for a little design.  The icon panel should have the following features:<p>
+
+<ul><li>Icons are placed in centered down the midline of the panel;</li>
+<li>Icons have captions;</li>
+<li>Clicking on an icon triggers an event that is supplied by the application;</li>
+<li>Icons are ordered from top to bottom in the order that they are added to the band;</li>
+<li>The icon panel defaults to a white background;</li><li>Icons need to support transparency.</li>
+</ul><p>First off, setting the background color of the panel to white reveals a bug in the size calculation of the parent band panel.  
+This is corrected to include both the button height and content panel height:</p>
+<pre>private void RecalcLayout(BandPanel bandPanel, int index)
+{
+	int vPos=(index <= selectedBand) ? buttonHeight*index : buttonHeight*index+selectedBandHeight;
+	int height=selectedBand==index ? <span style="background-color: #FF00FF">selectedBandHeight+buttonHeight</span> : buttonHeight;
+	...
+</pre>
+
+Icons in the icon panel consist of the icon image itself and a caption.  Both are centered.  The caption must be implemented as a <code>Label</code> contained by the
+<code>IconPanel</code>.  Thus, for every icon in the icon panel, there are two controls created: the <code>PanelIcon</code> (derived from <code>PictureBox</code>) and the
+caption, which is instantiated as a <code>Label</code>.  The code ends up looking like this:<p>
+<pre>public class IconPanel : ContentPanel
+{
+	protected int iconSpacing;
+	protected int margin;
+
+	public int IconSpacing
+	{
+		get
+		{
+			return iconSpacing;
+		}
+	}
+
+	public int Margin
+	{
+		get
+		{
+			return margin;
+		}
+	}
+
+	public IconPanel()
+	{
+		margin=10;
+		iconSpacing=32+15+10;	// icon height + text height + margin
+		BackColor=Color.White;
+		AutoScroll=true;
+	}
+
+	public void AddIcon(string caption, Image image, EventHandler onClickEvent)
+	{
+		int index=Controls.Count/2;	// two entries per icon
+		PanelIcon panelIcon=new PanelIcon(this, image, index, onClickEvent);
+		Controls.Add(panelIcon);
+
+		Label label=new Label();
+		label.Text=caption;
+		label.Visible=true;
+		label.Location=new Point(0, margin+image.Size.Height+index*iconSpacing);
+		label.Size=new Size(Size.Width, 15);
+		label.TextAlign=ContentAlignment.TopCenter;
+		label.Click+=onClickEvent;
+		label.Tag=panelIcon;
+		Controls.Add(label);
+	}
+}
+
+public class PanelIcon : PictureBox
+{
+	public int index;
+	public IconPanel iconPanel;
+
+	public PanelIcon(IconPanel parent, Image image, int index, EventHandler onClickEvent)
+	{
+		this.index=index;
+		this.iconPanel=parent;
+		Image=image;
+		Visible=true;
+		Location=new Point(iconPanel.outlookBar.Size.Width/2-image.Size.Width/2,
+			iconPanel.Margin + index*iconPanel.IconSpacing);
+		Size=image.Size;
+		Click+=onClickEvent;
+		Tag=this;
+	}
+}
+</pre>
+
+Note that both the <code>PictureBox</code> and the <code>Label</code> can be clicked.  The <code>Tag</code> property is set to the <code>PanelIcon</code> in both cases,
+should the application require some additional information regarding the sender of the event.<p>
+
+Incidentally, changing the background to some other color verifies that icon transparency is functioning correctly.<p>
+
+During this implementation of the icon bar, certain design issues have come up:<p>
+
+<ul><li>Can the application specify the caption font?</li><li>Can the application specify the caption color?</li>
+<li>Can the application change the background color of the panel?  What about textures?</li>
+<li>Changing the bar width is going to require a lot of recalculations for text and icon centering.</li>
+<li>There are no setter functions for the vertical margin and the icon spacing.</li>
+<li>The icon spacing needs to be adjusted if we plan to support large icons.</li>
+<li>The icon spacing is hard coded and assumes an icon size of 32x32.</li>
+</ul><p>
+These are all valid issues, but for my needs right now, I don't need to consider them.
+(I'd rather go walking on the beach, in other words). <p>
+The current implementation results in a nice presentation:</p>
+<img src="CSOutlookBar\screenShot5.jpg" width="208" height="358"><p>
+For some reason, the scroll bar was slightly off screen to the right and the slightly too long.  The correct appearance:<p>
+<img src="CSOutlookBar\screenShot6.jpg" width="208" height="252"><p>
+is only achieved by modifying the dimensions of that content panel:<p>
+<pre>bandPanel.Controls[1].Size=new Size(ClientRectangle.Width-2, height-8);
+</pre>
+which I have no explanation for, as the size is being determined by the client area of the band panel.  If anyone else has some ideas, let me know!
+<h2><a name="#EyeCandy">Eye Candy</a></h2>
+
+
+<p>I wanted to implement one piece of &quot;eye candy&quot;, which is to highlight the icon background when the mouse enters the icon area.
+My first implementation was straightforward, adding <code>MouseEnter</code> and <code>MouseLeave</code> event handlers to the <code>PanelIcon</code> class:</p>
+<pre>private void OnMouseEnter(object sender, EventArgs e)
+{
+	BackColor=Color.LightCyan;
+	BorderStyle=BorderStyle.FixedSingle;
+	Location=Location-new Size(1, 1);
+}
+
+private void OnMouseLeave(object sender, EventArgs e)
+{
+	BackColor=bckgColor;
+	BorderStyle=BorderStyle.None;
+	Location=Location+new Size(1, 1);
+}
+</pre>
+Note that in this code, I'm also setting the border style.  When I first set just the background, everything worked great.  When I added turning on and off a
+border around the icon, things started to go wrong.  First off, the icon shifted right and down by one pixel, which wasn't too pleasing visually.  Secondly, the
+border wouldn't disappear if the mouse left the icon from the right or the bottom edge.  To fix the shifting of the icon, I simply moved to location up and to the
+left on entry and back down and to the right on exit.  However, the icon background was still not being cleared properly, and this only happened when a border was
+specified.  As it turns out, the problem has to do with the border, and the fact that as soon as the <code>OnMouseLeave</code> event is called and the icon is
+repositioned (forward and down), this results in the <code>OnMouseEnter</code> event being called.  Subsequently, there is no corresponding <code>OnMouseLeave</code>
+called again!<p>
+
+The fix to this was to "enter" the icon at a slightly smaller size, using the <code>MouseMove</code> event to determine the mouse position, and to set up a flag
+to keep track of whether the mouse was "entered" or not.  The following code illustrates the solution:<p>
+<pre>private void OnMouseMove(object sender, MouseEventArgs args)
+{
+	if ( (args.X < Size.Width-2) &&
+		(args.Y < Size.Width-2) &&
+		(!mouseEnter) )
+	{
+		BackColor=Color.LightCyan;
+		BorderStyle=BorderStyle.FixedSingle;
+		Location=Location-new Size(1, 1);
+		mouseEnter=true;
+	}
+}
+
+private void OnMouseEnter(object sender, EventArgs e)
+{
+}
+
+private void OnMouseLeave(object sender, EventArgs e)
+{
+	if (mouseEnter)
+	{
+		BackColor=bckgColor;
+		BorderStyle=BorderStyle.None;
+		Location=Location+new Size(1, 1);
+		mouseEnter=false;
+	}
+}
+</pre>
+This code works great, and now I have a lovely highlighted icon with a border around it when the mouse enters the icon:<p>
+<img src="CSOutlookBar\screenShot7.jpg" width="185" height="288"> <p>&nbsp;</p>
+<h2><a name="#Conclusion">Conclusion</a></h2>
+What?  That's it?  Yes, that's it.  I now have a lovely icon Outlook bar that is quite sufficient for my needs.  There's lots of room for expansion (and error checking!),
+but those things can be added in later.  Enough goofing around, it's time to use this thing in my client's application and get some billable hours on the books.<p>
+For those interested, the sample bar is generated using a few lines of code in the <code>Form</code> constructor:<p>
+<pre>OutlookBar outlookBar=new OutlookBar();
+outlookBar.Location=new Point(0, 0);
+outlookBar.Size=new Size(150, this.ClientSize.Height);
+outlookBar.BorderStyle=BorderStyle.FixedSingle;
+Controls.Add(outlookBar);
+outlookBar.Initialize();
+
+IconPanel iconPanel1=new IconPanel();
+IconPanel iconPanel2=new IconPanel();
+IconPanel iconPanel3=new IconPanel();
+outlookBar.AddBand("Outlook Shortcuts", iconPanel1);
+outlookBar.AddBand("My Shortcuts", iconPanel2);
+outlookBar.AddBand("Other Shortcuts", iconPanel3);
+
+iconPanel1.AddIcon("Outlook Today", Image.FromFile("img1.ico"), new EventHandler(PanelEvent));
+iconPanel1.AddIcon("Calendar", Image.FromFile("img2.ico"), new EventHandler(PanelEvent));
+iconPanel1.AddIcon("Contacts", Image.FromFile("img3.ico"), new EventHandler(PanelEvent));
+iconPanel1.AddIcon("Tasks", Image.FromFile("img4.ico"), new EventHandler(PanelEvent));
+outlookBar.SelectBand(0);
+</pre>
+Enjoy!
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>
+&nbsp;<p>
+&nbsp;</pre></pre></body></html>

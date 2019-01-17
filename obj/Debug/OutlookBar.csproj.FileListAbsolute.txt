@@ -1,0 +1,14 @@
+C:\Users\RD\Desktop\C# outlook menu\從03修改成功的範例\projects.net\OutlookBar\bin\Debug\OutlookBar.exe
+C:\Users\RD\Desktop\C# outlook menu\從03修改成功的範例\projects.net\OutlookBar\bin\Debug\OutlookBar.pdb
+C:\Users\RD\Desktop\C# outlook menu\從03修改成功的範例\projects.net\OutlookBar\obj\Debug\OutlookBar.Form1.resources
+C:\Users\RD\Desktop\C# outlook menu\從03修改成功的範例\projects.net\OutlookBar\obj\Debug\OutlookBar.csproj.GenerateResource.Cache
+C:\Users\RD\Desktop\C# outlook menu\從03修改成功的範例\projects.net\OutlookBar\obj\Debug\OutlookBar.exe
+C:\Users\RD\Desktop\C# outlook menu\從03修改成功的範例\projects.net\OutlookBar\obj\Debug\OutlookBar.pdb
+C:\Users\RD\Desktop\C# outlook menu\從03修改成功的範例\projects.net\OutlookBar\obj\Debug\OutlookBar.csprojResolveAssemblyReference.cache
+D:\Visual project code\C# outlook menu\從03修改成功的範例\projects.net\OutlookBar\obj\Debug\OutlookBar.exe
+D:\Visual project code\C# outlook menu\從03修改成功的範例\projects.net\OutlookBar\obj\Debug\OutlookBar.pdb
+D:\Visual project code\C# outlook menu\從03修改成功的範例\projects.net\OutlookBar\bin\Debug\OutlookBar.exe
+D:\Visual project code\C# outlook menu\從03修改成功的範例\projects.net\OutlookBar\bin\Debug\OutlookBar.pdb
+D:\Visual project code\C# outlook menu\從03修改成功的範例\projects.net\OutlookBar\obj\Debug\OutlookBar.csprojResolveAssemblyReference.cache
+D:\Visual project code\C# outlook menu\從03修改成功的範例\projects.net\OutlookBar\obj\Debug\OutlookBar.Form1.resources
+D:\Visual project code\C# outlook menu\從03修改成功的範例\projects.net\OutlookBar\obj\Debug\OutlookBar.csproj.GenerateResource.Cache

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet type='text/xsl' href='_UpgradeReport_Files/UpgradeReport.xslt'?><UpgradeLog>
+<Properties><Property Name="Solution" Value="OutlookBar">
+</Property><Property Name="方案檔" Value="C:\Users\RD\Desktop\C# outlook menu\03\projects.net\OutlookBar\OutlookBar.sln">
+</Property><Property Name="使用者選項檔" Value="C:\Users\RD\Desktop\C# outlook menu\03\projects.net\OutlookBar\OutlookBar.suo">
+</Property><Property Name="Date" Value="2016年12月1日">
+</Property><Property Name="Time" Value="下午 13:22">
+</Property></Properties><Event ErrorLevel="0" Project="" Source="OutlookBar.sln" Description="檔案已成功備份為 C:\Users\RD\Desktop\C# outlook menu\03\projects.net\OutlookBar\Backup\OutlookBar.sln">
+</Event><Event ErrorLevel="0" Project="" Source="OutlookBar.suo" Description="檔案已成功備份為 C:\Users\RD\Desktop\C# outlook menu\03\projects.net\OutlookBar\Backup\OutlookBar.suo">
+</Event><Event ErrorLevel="0" Project="OutlookBar" Source="OutlookBar.csproj" Description="專案檔已成功備份為 C:\Users\RD\Desktop\C# outlook menu\03\projects.net\OutlookBar\Backup\OutlookBar.csproj">
+</Event><Event ErrorLevel="0" Project="OutlookBar" Source="OutlookBar.csproj.user" Description="專案使用者檔案已成功備份為 C:\Users\RD\Desktop\C# outlook menu\03\projects.net\OutlookBar\Backup\OutlookBar.csproj.user">
+</Event><Event ErrorLevel="0" Project="OutlookBar" Source="AssemblyInfo.cs" Description="檔案已成功備份為 C:\Users\RD\Desktop\C# outlook menu\03\projects.net\OutlookBar\Backup\AssemblyInfo.cs">
+</Event><Event ErrorLevel="0" Project="OutlookBar" Source="Form1.cs" Description="檔案已成功備份為 C:\Users\RD\Desktop\C# outlook menu\03\projects.net\OutlookBar\Backup\Form1.cs">
+</Event><Event ErrorLevel="0" Project="OutlookBar" Source="OutlookBar.cs" Description="檔案已成功備份為 C:\Users\RD\Desktop\C# outlook menu\03\projects.net\OutlookBar\Backup\OutlookBar.cs">
+</Event><Event ErrorLevel="0" Project="OutlookBar" Source="App.ico" Description="檔案已成功備份為 C:\Users\RD\Desktop\C# outlook menu\03\projects.net\OutlookBar\Backup\App.ico">
+</Event><Event ErrorLevel="0" Project="OutlookBar" Source="bin\Debug\img1.ico" Description="檔案已成功備份為 C:\Users\RD\Desktop\C# outlook menu\03\projects.net\OutlookBar\Backup\bin\Debug\img1.ico">
+</Event><Event ErrorLevel="0" Project="OutlookBar" Source="bin\Debug\img2.ico" Description="檔案已成功備份為 C:\Users\RD\Desktop\C# outlook menu\03\projects.net\OutlookBar\Backup\bin\Debug\img2.ico">
+</Event><Event ErrorLevel="0" Project="OutlookBar" Source="bin\Debug\img3.ico" Description="檔案已成功備份為 C:\Users\RD\Desktop\C# outlook menu\03\projects.net\OutlookBar\Backup\bin\Debug\img3.ico">
+</Event><Event ErrorLevel="0" Project="OutlookBar" Source="bin\Debug\img4.ico" Description="檔案已成功備份為 C:\Users\RD\Desktop\C# outlook menu\03\projects.net\OutlookBar\Backup\bin\Debug\img4.ico">
+</Event><Event ErrorLevel="0" Project="OutlookBar" Source="Form1.resx" Description="檔案已成功備份為 C:\Users\RD\Desktop\C# outlook menu\03\projects.net\OutlookBar\Backup\Form1.resx">
+</Event><Event ErrorLevel="0" Project="OutlookBar" Source="OutlookBar.csproj" Description="專案轉換成功">
+</Event><Event ErrorLevel="3" Project="OutlookBar" Source="OutlookBar.csproj" Description="Converted">
+</Event><Event ErrorLevel="0" Project="" Source="OutlookBar.sln" Description="方案轉換成功">
+</Event><Event ErrorLevel="3" Project="" Source="OutlookBar.sln" Description="Converted">
+</Event><Event ErrorLevel="0" Project="OutlookBar" Source="OutlookBar.csproj" Description="掃描完成: 專案檔不需要升級。">
+</Event></UpgradeLog>

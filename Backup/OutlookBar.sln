@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 7.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OutlookBar", "OutlookBar.csproj", "{8C7B7EEB-763B-401E-95D5-1EB11E66FFE9}"
+EndProject
+Global
+	GlobalSection(SolutionConfiguration) = preSolution
+		ConfigName.0 = Debug
+		ConfigName.1 = Release
+	EndGlobalSection
+	GlobalSection(ProjectDependencies) = postSolution
+	EndGlobalSection
+	GlobalSection(ProjectConfiguration) = postSolution
+		{8C7B7EEB-763B-401E-95D5-1EB11E66FFE9}.Debug.ActiveCfg = Debug|.NET
+		{8C7B7EEB-763B-401E-95D5-1EB11E66FFE9}.Debug.Build.0 = Debug|.NET
+		{8C7B7EEB-763B-401E-95D5-1EB11E66FFE9}.Release.ActiveCfg = Release|.NET
+		{8C7B7EEB-763B-401E-95D5-1EB11E66FFE9}.Release.Build.0 = Release|.NET
+	EndGlobalSection
+	GlobalSection(SolutionItems) = postSolution
+		Item:1 = OutlookBar.vsd
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+	EndGlobalSection
+	GlobalSection(ExtensibilityAddIns) = postSolution
+	EndGlobalSection
+EndGlobal
